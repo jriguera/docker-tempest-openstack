@@ -1,0 +1,11 @@
+backend = "env"
+confdir = "/etc/confd"
+debug = true
+interval = 300
+nodes = []
+noop = false
+prefix = "/"
+quiet = true
+scheme = "http"
+verbose = true
+watch = false
