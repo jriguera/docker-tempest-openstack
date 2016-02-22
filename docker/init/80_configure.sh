@@ -10,6 +10,7 @@ if [ ! -d "$TEMPEST_DIR/.testrepository" ]; then
     fi
     (
        	tempest init $TEMPEST_DIR
+        rm -f $TEMPEST_CONFIG
     )
     if [ -n "$MOVED" ]; then
 	for f in $MOVED/*; do
@@ -26,5 +27,6 @@ if command -v confd >/dev/null 2>&1; then
     	if alarm 3 "echo > /dev/tcp/$ETCD_HOST/$ETCD_PORT" 2> /dev/null; then
     		# Run confd in the background to watch the upstream servers
       		confd -onetime -backend etcd -node "http://$ETCD_HOST:$ETCD_PORT"
+                export TEMPEST_AUTOCONFIGURE=${TEMPEST_AUTOCONFIGURE:-false}
     	fi
 fi

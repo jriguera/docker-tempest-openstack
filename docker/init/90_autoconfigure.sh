@@ -1,5 +1,17 @@
 #!/bin/bash
 
+
+# No autoconfiguration is the config file exists and AUTOCONFIGURE is
+# not defined
+if [ -r "$TEMPEST_CONFIG" ] && [ -z "$TEMPEST_AUTOCONFIGURE" ]; then
+    export TEMPEST_AUTOCONFIGURE=${TEMPEST_AUTOCONFIGURE:-false}
+else
+    export TEMPEST_AUTOCONFIGURE=${TEMPEST_AUTOCONFIGURE:-true}
+fi
+if [ "$TEMPEST_AUTOCONFIGURE" != "true" ]; then
+    echo "> Autoconfiguration disabled"
+    return 1
+fi
 # Check if there are OS_AUTH env variables for autoconfiguration
 if [ -z "$OS_AUTH_URL" ] || [ -z "$OS_USERNAME" ] || [ -z "$OS_PASSWORD" ] || [ -z "$OS_PROJECT_NAME" ]; then
     echo "> Env OS_* variables not defined for autoconfiguration"
@@ -219,9 +231,8 @@ if [ -z "$TEMPEST_NOVA_ENABLED" ]; then
     fi
 fi
 if [ "$TEMPEST_NOVA_ENABLED" == "true" ] && [ -z "$TEMPEST_NOVA_EC2" ]; then
-    EC2=$(check_service "ec2")
-    if [ -n "$EC2" ]; then
-	export TEMPEST_NOVA_EC2=$EC2
+    export TEMPEST_NOVA_EC2=$(check_service "ec2")
+    if [ "$TEMPEST_NOVA_EC2" == "true" ]; then
         echo "> Enabling Nova tempest for EC2"
     fi
 fi
