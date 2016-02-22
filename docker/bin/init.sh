@@ -10,7 +10,7 @@ if [ ! -d "$TEMPEST_DIR/.testrepository" ]; then
 	source /etc/my_init.d/$initd
     done
 else
-    echo "> Skiping configuration, config file exists!"
+    echo "> Skipping configuration, .testrepository exists!"
 fi
 
 # Scan /tempest for ssh keys to add
