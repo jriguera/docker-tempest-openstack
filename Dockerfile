@@ -1,6 +1,6 @@
-# diamond-ontapclustercollector
+# openstack-tempest
 #
-# VERSION  0.2.0
+# VERSION  0.1.0
 #
 # Use phusion/baseimage as base image.
 # https://github.com/phusion/baseimage-docker/blob/master/Changelog.md
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 RUN apt-get install -y python-minimal python-setuptools python-pip python-dev libffi-dev libssl-dev git 
 
 # Install openstack client
-RUN pip install python-openstackclient
+RUN pip install python-openstackclient python-neutronclient python-novaclient
 
 # Env variables for openstackclient
 env LC_ALL=C
