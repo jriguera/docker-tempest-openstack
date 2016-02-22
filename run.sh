@@ -1,27 +1,43 @@
 #!/bin/bash
 
+# This is an example of howto run using the docker with env variables
+
 # Docker with confd to manage the configuration
 # see https://github.com/kelseyhightower/confd/blob/master/docs/quick-start-guide.md
 IMAGE=tempest
 DATADIR="$(pwd)/tempest"
 mkdir -p $DATADIR
 
+# If exists read the OpenStack env variables file
 [ -r openrc.sh ] && . openrc.sh
+
+# Copy the rest of the files to avoid autoconfiguration
 [ -r accounts.yaml ] && mkdir -p $DATADIR/etc && cp -v accounts.yaml $DATADIR/etc/accounts.yaml
 [ -r tempest.conf ] && mkdir -p $DATADIR/etc && cp -v tempest.conf $DATADIR/etc/tempest.conf
 [ -r logging.conf ] && mkdir -p $DATADIR/etc && cp -v logging.conf $DATADIR/etc/logging.conf
 
 # Run the image
 # First, define the ETCD/Consul/Env keys for the configuration
+# Here, only ENV examples are provided.
 
-# If tempest config file is defined, no autoconfiguration will be done
-# To speed up the startup, you can point to the configuration created
-# previously on the tempest etc folder
-#-e TEMPEST_CONFIG=/etc/tempest/tempest.conf \
+# Tests will run using the  ostestr wrapper, you can
+# switch to the traditional testr command by defining
+#-e TEMPEST_COMMAND=testr
+
+# Autoconfiguration only works with ENV variables, for the rest
+# of the backends, you have to define all the variables!. If
+# not defined autoconfiguration will not run if it finds the
+# TEMPEST_CONFIG file
+#-e TEMPEST_AUTOCONFIGURE
+
+# If .testrepository is found on /tempest, no configuration will
+# be done.
+#-e TEMPEST_CONFIG=/tempest/etc/tempest.conf \
 # If accounts is defined, no admin credentials have to be provided,
-# only credentias for that account
-#-e TEMPEST_AUTH_TESTACCOUNTSFILE=/etc/tempest/accounts.yml \
-#-e TEMPEST_AUTH_GENERATEACCOUNTS=true \
+# only credentias for that account (if autoconfiguration is true)
+# The user needs admin role to be able to list services, endpoints ...
+#-e TEMPEST_AUTH_TESTACCOUNTSFILE=/tempest/etc/accounts.yaml \
+#-e TEMPEST_AUTH_GENERATEACCOUNTS=false \
 # ... otherwise, define those variables, or ...
 #-e TEMPEST_AUTH_ADMINUSERNAME=admin \
 #-e TEMPEST_AUTH_ADMINTENANTNAME=admin \
@@ -29,15 +45,15 @@ mkdir -p $DATADIR
 #-e TEMPEST_AUTH_DOMAIN=Default \
 # ... the values will be taken from OS_* env variables
 
-# Identity
+# Identity configuration variables will be taken from the
+# OS_AUTH_URL env variables
 #-e TEMPEST_IDENTITY_URIV3
 #-e TEMPEST_IDENTITY_URIV2
 #-e TEMPEST_IDENTITY_REGION
 #-e TEMPEST_IDENTITY_ENDPOINTTYPE
 #-e TEMPEST_IDENTITY_DOMAINID
 
-# Configuration for the rest of the services
-
+# Configuration variables for the rest of the services
 #-e TEMPEST_HORIZON_URL \
 #-e TEMPEST_GLANCE_HTTPIMAGE \
 #-e TEMPEST_CINDER_BACKENDS \
@@ -70,6 +86,7 @@ mkdir -p $DATADIR
 #-e TEMPEST_SCENARIO_FLAVORREGEX \
 
 docker run -i -t -v ${DATADIR}:/tempest \
+-e TEMPEST_COMMAND=ostestr \
 -e OS_AUTH_URL=${OS_AUTH_URL} \
 -e OS_AUTH_VERSION=${OS_AUTH_VERSION:-3} \
 -e OS_REGION_NAME=${OS_REGION_NAME:-RegionOne} \
@@ -95,9 +112,9 @@ docker run -i -t -v ${DATADIR}:/tempest \
 -e TEMPEST_SWIFT_ENABLED=false \
 -e TEMPEST_VALIDATION_RUN=true \
 -e TEMPEST_VALIDATION_CONNECT=floating \
--e TEMPEST_VALIDATION_SSHNET=public \
--e TEMPEST_VALIDATION_FLOATINGIPRANGE=10.200.10.10/29 \
--e TEMPEST_NEUTRON_FLOATINGPOOL=public \
+-e TEMPEST_VALIDATION_SSHNET="ext-net" \
+-e TEMPEST_VALIDATION_FLOATINGIPRANGE=10.200.10.240/29 \
+-e TEMPEST_NEUTRON_FLOATINGPOOL="ext-net" \
 -e TEMPEST_NEUTRON_TENANTCIDR=10.0.0.0/24 \
 -e TEMPEST_NEUTRON_TENANTREACHABLE=false \
 $IMAGE "$@"
